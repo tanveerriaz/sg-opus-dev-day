@@ -12,7 +12,7 @@ Approved by the user on 13 October 2026: use the existing A1 bear and the presen
 
 - Approved brand asset: [assets/grub-bear.png](assets/grub-bear.png) — the original A1 image, unchanged.
 - Colour reference: [palette.svg](palette.svg).
-- Product contracts: [`src/lib/menu.ts`](../../src/lib/menu.ts), [`docs/menu-format.md`](../menu-format.md), [`GLOSSARY.md`](../../GLOSSARY.md).
+- Product contracts: [`src/lib/menu.ts`](../../src/lib/menu.ts), [`docs/menu-format.md`](../menu-format.md).
 - Presentation: https://grub-presentation.vercel.app/ (concept screens are labelled; not every depicted feature is released).
 
 **Documentation only:** the proposed tokens, shared logo component and control classes below are specifications for future app work. They are not installed by this document. When implementation is requested, establish one shared token source in the existing global stylesheet and one reusable brand component; do not create competing styles in each screen.
