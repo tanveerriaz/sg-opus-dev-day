@@ -85,4 +85,4 @@ Before marking issue #1 complete, open the production table-12 link on a physica
 - Dependency audit after PostCSS patch: zero reported vulnerabilities.
 - Supabase: initial schema applied through the SQL editor; all three tables exist with RLS enabled. Stored seed has 11 items, including three tagged with peanuts.
 - Production: Vercel deployment `dpl_9mxZrBWChx1yiVbqppz12rrPLA4F` is READY with the production database settings. Public HTTPS smoke checks pass for all five URL contexts and the missing-restaurant 404.
-- Physical-phone check: awaiting confirmation. Browser mobile-width verification does not replace this acceptance step.
+- Physical-phone check: user confirmed the production restaurant name, Table 12 and menu work on a real phone on 13 October 2026. All five issue #1 acceptance criteria are verified.
