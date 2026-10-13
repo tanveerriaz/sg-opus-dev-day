@@ -1,0 +1,109 @@
+{
+  "id": "kopi-satay-house",
+  "name": "Kopi & Satay House",
+  "source_url": null,
+  "menu": {
+    "currency": "SGD",
+    "items": [
+      {
+        "id": "chicken-satay",
+        "name": "Chicken Satay (10 sticks)",
+        "price": 9.0,
+        "category": "Grill",
+        "description": "Charcoal-grilled marinated chicken skewers with peanut sauce, cucumber and onion.",
+        "dietary_tags": ["halal"],
+        "allergens": ["peanuts", "soy"]
+      },
+      {
+        "id": "gado-gado",
+        "name": "Gado Gado",
+        "price": 7.5,
+        "category": "Mains",
+        "description": "Blanched vegetables, tofu, tempeh and egg with a thick peanut dressing.",
+        "dietary_tags": ["vegetarian"],
+        "allergens": ["peanuts", "soy", "egg"]
+      },
+      {
+        "id": "nasi-lemak",
+        "name": "Nasi Lemak",
+        "price": 6.5,
+        "category": "Mains",
+        "description": "Coconut rice with fried chicken wing, fried egg, ikan bilis, roasted peanuts and sambal.",
+        "dietary_tags": ["halal", "spicy"],
+        "allergens": ["peanuts", "egg", "fish"]
+      },
+      {
+        "id": "hainanese-chicken-rice",
+        "name": "Hainanese Chicken Rice",
+        "price": 6.0,
+        "category": "Mains",
+        "description": "Poached chicken on fragrant rice with chilli, ginger and dark soy.",
+        "dietary_tags": [],
+        "allergens": ["soy"]
+      },
+      {
+        "id": "laksa",
+        "name": "Laksa",
+        "price": 8.0,
+        "category": "Mains",
+        "description": "Spicy coconut curry noodle soup with prawns, fishcake and cockles.",
+        "dietary_tags": ["spicy"],
+        "allergens": ["shellfish", "fish", "gluten"]
+      },
+      {
+        "id": "beef-rendang",
+        "name": "Beef Rendang with Rice",
+        "price": 9.5,
+        "category": "Mains",
+        "description": "Slow-cooked beef in a spicy coconut and lemongrass curry, served with white rice.",
+        "dietary_tags": ["halal", "spicy"],
+        "allergens": []
+      },
+      {
+        "id": "sambal-kangkong",
+        "name": "Sambal Kangkong",
+        "price": 5.0,
+        "category": "Sides",
+        "description": "Water spinach stir-fried in fiery shrimp-paste sambal.",
+        "dietary_tags": ["spicy"],
+        "allergens": ["shellfish"]
+      },
+      {
+        "id": "kaya-toast-set",
+        "name": "Kaya Toast Set",
+        "price": 4.5,
+        "category": "Sides",
+        "description": "Toast with kaya and butter, two soft-boiled eggs and a dash of soy sauce.",
+        "dietary_tags": ["vegetarian"],
+        "allergens": ["gluten", "milk", "egg", "soy"]
+      },
+      {
+        "id": "kopi",
+        "name": "Kopi",
+        "price": 1.8,
+        "category": "Drinks",
+        "description": "Local coffee with condensed milk.",
+        "dietary_tags": ["vegetarian"],
+        "allergens": ["milk"]
+      },
+      {
+        "id": "teh-tarik",
+        "name": "Teh Tarik",
+        "price": 2.0,
+        "category": "Drinks",
+        "description": "Pulled black tea with condensed milk.",
+        "dietary_tags": ["vegetarian"],
+        "allergens": ["milk"]
+      },
+      {
+        "id": "lime-juice",
+        "name": "Iced Lime Juice",
+        "price": 2.5,
+        "category": "Drinks",
+        "description": "Fresh calamansi lime juice over ice.",
+        "dietary_tags": ["vegan", "gluten-free"],
+        "allergens": []
+      }
+    ]
+  }
+}
