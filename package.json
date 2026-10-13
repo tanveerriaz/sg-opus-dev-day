@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node --env-file=.env.local scripts/seed.mjs"
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "check:menu": "node scripts/check-menu.mjs",
+    "check:db": "node --env-file-if-exists=.env.local scripts/check-db.mjs",
+    "check:smoke": "node scripts/check-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -22,5 +25,8 @@
     "@types/react-dom": "^19.1.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.6.0"
+  },
+  "overrides": {
+    "postcss": "8.5.30"
   }
 }
