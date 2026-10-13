@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>QR Ordering Agent: demo</title>
+<style>
+  :root {
+    --ink: #1c1410; --cream: #fff6e9; --card: #ffffff; --line: #eadfce; --mute: #7a6a5c;
+    --orange: #ff5a2c; --green: #0fae78; --amber: #ffb81c; --violet: #6b5cf6;
+    --green-soft: #d9f6ea; --amber-soft: #ffeebf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #000; }
+  body { font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif; color: var(--ink); }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--cream); }
+  .scene { position: absolute; inset: 0; display: none; overflow: hidden; background: var(--cream); }
+  .scene.dark { background: var(--ink); color: var(--cream); }
+  .blob { position: absolute; border-radius: 50%; }
+
+  /* ---------- left-hand copy ---------- */
+  .copy { position: absolute; left: 120px; top: 0; bottom: 120px; width: 720px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+  .pill { display: inline-flex; align-items: center; gap: 14px; background: var(--ink); color: var(--cream); border-radius: 999px; padding: 10px 26px 10px 10px; font-size: 26px; font-weight: 600; }
+  .pill b { background: var(--accent, var(--orange)); color: #fff; border-radius: 999px; padding: 6px 16px; font-weight: 800; }
+  .copy h1 { margin-top: 30px; font-size: 96px; line-height: 1.02; font-weight: 800; letter-spacing: -2.5px; }
+  .copy h1 em { font-style: normal; color: var(--accent, var(--orange)); }
+  .copy p { margin-top: 28px; font-size: 35px; line-height: 1.35; color: #4f4136; font-weight: 500; }
+  .facts { margin-top: 34px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+  .fact { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 12px 22px; font-size: 27px; font-weight: 600; box-shadow: 0 6px 0 rgba(28,20,16,.06); }
+
+  .viz { position: absolute; left: 880px; right: 80px; top: 50px; bottom: 150px; display: flex; align-items: center; justify-content: center; gap: 50px; }
+
+  /* ---------- journey tracker ---------- */
+  #stepper { position: absolute; left: 120px; right: 120px; bottom: 44px; height: 70px; z-index: 5; }
+  #stepper .track { position: absolute; left: 0; right: 0; top: 12px; height: 6px; border-radius: 3px; background: #e6d9c6; }
+  #stepper .fill { position: absolute; left: 0; top: 12px; height: 6px; border-radius: 3px; background: var(--ink); width: 0; }
+  #stepper .steps { position: absolute; inset: 0; display: flex; justify-content: space-between; }
+  #stepper .st { width: 200px; text-align: center; font-size: 22px; font-weight: 700; color: #b3a391; }
+  #stepper .st i { display: block; width: 30px; height: 30px; margin: 0 auto 10px; border-radius: 50%; background: var(--cream); border: 6px solid #e6d9c6; }
+  #stepper .st.done i { border-color: var(--ink); background: var(--ink); }
+  #stepper .st.on { color: var(--ink); }
+  #stepper .st.on i { border-color: var(--orange); background: #fff; }
+  #wipe, #wipe2 { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; z-index: 20; transform: translateX(-100%); }
+
+  /* ---------- scene 1 and 8 ---------- */
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .hook { font-size: 118px; font-weight: 800; letter-spacing: -3px; line-height: 1.1; }
+  .hook.o { color: var(--orange); }
+  .logo { display: flex; align-items: center; gap: 34px; }
+  .logo .mark { width: 150px; height: 150px; border-radius: 38px; background: var(--orange); position: relative; box-shadow: 0 14px 0 rgba(0,0,0,.25); }
+  .logo .mark span { position: absolute; background: #fff; border-radius: 8px; }
+  .logo .word { font-size: 104px; font-weight: 800; letter-spacing: -3px; }
+  .tag { margin-top: 44px; display: flex; gap: 30px; font-size: 68px; font-weight: 700; }
+  .tag span:nth-child(1) { color: var(--amber); } .tag span:nth-child(2) { color: #5fe0b4; } .tag span:nth-child(3) { color: #ff8f6e; }
+  .foot { margin-top: 60px; font-size: 30px; color: #cbb9a6; font-weight: 500; }
+  .recap { display: flex; align-items: center; gap: 26px; }
+  .recap .r { width: 250px; text-align: center; font-size: 36px; font-weight: 700; }
+  .recap .r div { width: 170px; height: 170px; margin: 0 auto 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 84px; background: #2c211b; border: 5px solid #45352b; }
+  .recap .a { font-size: 60px; color: var(--orange); font-weight: 800; margin-top: -60px; }
+
+  /* ---------- browser mock ---------- */
+  .browser { width: 930px; height: 770px; background: #fff; border-radius: 28px; border: 4px solid var(--ink); box-shadow: 14px 14px 0 var(--ink); overflow: hidden; }
+  .browser .bar { height: 62px; background: #f4eadb; border-bottom: 4px solid var(--ink); display: flex; align-items: center; gap: 10px; padding: 0 22px; }
+  .browser .bar i { width: 16px; height: 16px; border-radius: 50%; background: var(--orange); }
+  .browser .bar i:nth-child(2) { background: var(--amber); } .browser .bar i:nth-child(3) { background: var(--green); }
+  .browser .bar span { margin-left: 18px; background: #fff; border-radius: 10px; padding: 6px 18px; font-size: 20px; color: var(--mute); font-weight: 600; }
+  .browser .body { padding: 34px 40px; }
+  .browser h3 { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .urlrow { margin-top: 22px; display: flex; gap: 16px; }
+  .input { flex: 1; height: 76px; border: 4px solid var(--ink); border-radius: 18px; display: flex; align-items: center; padding: 0 24px; font-size: 30px; font-weight: 600; }
+  .caret { display: inline-block; width: 4px; height: 36px; background: var(--orange); margin-left: 3px; vertical-align: middle; }
+  .btn { height: 76px; padding: 0 34px; border-radius: 18px; background: var(--orange); color: #fff; font-size: 30px; font-weight: 800; display: flex; align-items: center; box-shadow: 0 7px 0 #b93a15; }
+  .btn.pressed { transform: translateY(6px); box-shadow: 0 1px 0 #b93a15; background: #e84a1e; }
+  .cols { margin-top: 34px; display: flex; gap: 34px; }
+  .steps2 { list-style: none; width: 360px; display: flex; flex-direction: column; gap: 20px; }
+  .steps2 li { display: flex; align-items: center; gap: 18px; font-size: 30px; font-weight: 700; }
+  .dot { width: 46px; height: 46px; border-radius: 50%; flex: none; position: relative; background: #f4eadb; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; font-weight: 800; }
+  .dot .ring { position: absolute; inset: 5px; border-radius: 50%; border: 6px solid #e3d3bd; border-top-color: var(--orange); }
+  .dot .tick { display: none; }
+  li.done .dot { background: var(--green); } li.done .ring { display: none; } li.done .tick { display: block; }
+  .result { flex: 1; position: relative; height: 430px; }
+  .photos { display: flex; gap: 12px; }
+  .photos div { width: 66px; height: 66px; border-radius: 16px; background: var(--amber-soft); display: flex; align-items: center; justify-content: center; font-size: 38px; border: 3px solid var(--ink); }
+  .rows { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 14px; background: #faf3e7; border-radius: 14px; padding: 11px 16px; font-size: 24px; font-weight: 700; }
+  .row span { margin-left: auto; font-weight: 600; color: var(--mute); }
+  .tagc { font-size: 17px; font-weight: 700; border-radius: 999px; padding: 4px 12px; background: var(--green-soft); color: #076a49; margin-left: 0 !important; }
+  .tagc.a { background: var(--amber-soft); color: #7a5200; }
+  .qrcard { background: #fff; border: 4px solid var(--ink); border-radius: 26px; padding: 22px 22px 16px; text-align: center; box-shadow: 10px 10px 0 var(--ink); }
+  .qrcard .qr { width: 250px; height: 250px; } .qrcard .qr svg { width: 100%; height: 100%; display: block; }
+  .qrcard b { display: block; margin-top: 10px; font-size: 32px; font-weight: 800; } .qrcard small { font-size: 21px; color: var(--mute); font-weight: 600; }
+  .result .qrcard { position: absolute; left: 50%; top: 50%; margin: -190px 0 0 -150px; }
+
+  /* ---------- phone mock ---------- */
+  .phone { width: 430px; height: 860px; flex: none; background: var(--ink); border-radius: 62px; padding: 14px; box-shadow: 16px 16px 0 rgba(28,20,16,.16); position: relative; }
+  .phone .screen { width: 100%; height: 100%; background: #fbf7f0; border-radius: 50px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .phone .notch { position: absolute; top: 26px; left: 50%; width: 110px; height: 30px; margin-left: -55px; background: var(--ink); border-radius: 16px; z-index: 4; }
+  .apphead { padding: 66px 24px 14px; background: #fff; border-bottom: 2px solid var(--line); }
+  .apphead b { display: block; font-size: 27px; font-weight: 800; letter-spacing: -.5px; } .apphead span { font-size: 19px; color: var(--mute); font-weight: 600; }
+  .apphead span u { text-decoration: none; background: var(--amber-soft); color: #7a5200; border-radius: 8px; padding: 2px 8px; }
+  .menu { padding: 6px 22px; }
+  .cat { margin-top: 16px; font-size: 16px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mute); }
+  .item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 2px solid var(--line); }
+  .item .em { width: 68px; height: 68px; flex: none; border-radius: 16px; background: var(--amber-soft); font-size: 40px; display: flex; align-items: center; justify-content: center; }
+  .item .t { flex: 1; } .item .n { display: flex; justify-content: space-between; font-size: 21px; font-weight: 700; }
+  .item .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chat { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 18px 12px; overflow: hidden; }
+  .msg { max-width: 88%; border-radius: 24px; padding: 13px 18px; font-size: 22px; line-height: 1.3; font-weight: 600; margin-top: 12px; }
+  .msg.ai { align-self: flex-start; background: #fff; border: 2px solid var(--line); border-bottom-left-radius: 6px; }
+  .msg.me { align-self: flex-end; background: var(--orange); color: #fff; border-bottom-right-radius: 6px; }
+  .msg.ev { align-self: center; background: var(--green-soft); color: #076a49; font-size: 18px; padding: 6px 16px; border-radius: 999px; }
+  .inbar { margin: 0 16px 20px; height: 62px; border-radius: 31px; background: #fff; border: 2px solid var(--line); display: flex; align-items: center; padding: 0 8px 0 24px; font-size: 21px; color: #a8998a; font-weight: 600; position: relative; }
+  .inbar .mic { margin-left: auto; width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; z-index: 2; }
+  .inbar .mic.live { background: var(--orange); }
+  .wave { position: absolute; left: 24px; right: 70px; top: 0; bottom: 0; display: flex; align-items: center; gap: 5px; background: #fff; }
+  .wave i { flex: 1; background: var(--orange); border-radius: 3px; height: 8px; }
+  .halo { position: absolute; right: 8px; top: 8px; width: 46px; height: 46px; border-radius: 50%; background: var(--orange); opacity: 0; }
+
+  /* camera view (scene 3) */
+  .cam { position: absolute; inset: 0; background: #2a211c; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; z-index: 3; }
+  .cam .frame { width: 270px; height: 270px; position: relative; background: #fff; border-radius: 18px; padding: 16px; overflow: hidden; }
+  .cam .frame svg { width: 100%; height: 100%; display: block; }
+  .cam .beam { position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--orange); box-shadow: 0 0 26px 10px rgba(255,90,44,.55); }
+  .cam p { margin-top: 30px; font-size: 24px; font-weight: 700; }
+  .flash { position: absolute; inset: 0; background: #fff; z-index: 5; opacity: 0; pointer-events: none; }
+  .tent { transform: rotate(-5deg); }
+  .callout { position: absolute; background: var(--ink); color: #fff; font-size: 25px; font-weight: 700; padding: 12px 22px; border-radius: 16px; white-space: nowrap; z-index: 6; }
+  .callout::after { content: ""; position: absolute; right: -18px; top: 50%; margin-top: -11px; border: 11px solid transparent; border-left-color: var(--ink); }
+
+  /* cart + sheets */
+  .cart { width: 400px; background: #fff; border: 4px solid var(--ink); border-radius: 28px; box-shadow: 10px 10px 0 var(--ink); padding: 26px; }
+  .cart h4 { font-size: 30px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+  .cart h4 span { font-size: 19px; background: var(--green-soft); color: #076a49; padding: 5px 14px; border-radius: 999px; }
+  .line { margin-top: 18px; display: flex; gap: 12px; font-size: 24px; font-weight: 700; }
+  .line .q { width: 44px; flex: none; color: var(--orange); font-weight: 800; }
+  .line small { display: block; font-size: 19px; color: #a25a00; font-weight: 700; margin-top: 2px; }
+  .line .pr { margin-left: auto; font-weight: 700; }
+  .total { margin-top: 22px; padding-top: 18px; border-top: 3px dashed var(--line); display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; }
+  .empty { margin-top: 18px; font-size: 22px; color: #a8998a; font-weight: 600; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 34px 34px 0 0; padding: 26px 24px 26px; box-shadow: 0 -12px 40px rgba(28,20,16,.22); z-index: 3; }
+  .sheet h4 { font-size: 27px; font-weight: 800; } .sheet .line { font-size: 21px; margin-top: 12px; } .sheet .line small { font-size: 17px; }
+  .sheet .total { font-size: 25px; margin-top: 14px; padding-top: 12px; }
+  .sheet .note { margin-top: 10px; font-size: 18px; color: var(--mute); font-weight: 600; }
+  .cta { margin-top: 16px; height: 64px; border-radius: 20px; background: var(--ink); color: #fff; font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .cta.pressed { background: var(--green); }
+  .tap { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; background: rgba(255,90,44,.35); border: 5px solid var(--orange); z-index: 9; }
+  .placed { position: absolute; inset: 0; background: var(--green); color: #fff; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+  .placed .ok { width: 150px; height: 150px; border-radius: 50%; background: #fff; color: var(--green); font-size: 96px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .placed b { margin-top: 30px; font-size: 44px; font-weight: 800; letter-spacing: -1px; } .placed span { margin-top: 12px; font-size: 26px; font-weight: 600; }
+  .placed em { margin-top: 26px; font-style: normal; background: rgba(255,255,255,.22); border-radius: 999px; padding: 10px 24px; font-size: 24px; font-weight: 700; }
+  #confetti { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+  #confetti i { position: absolute; left: 0; top: 0; width: 18px; height: 26px; border-radius: 4px; }
+
+  /* ---------- tablet / kitchen ---------- */
+  .tablet { width: 900px; height: 836px; background: var(--ink); border-radius: 44px; padding: 18px; box-shadow: 16px 16px 0 rgba(28,20,16,.16); }
+  .tablet .screen { width: 100%; height: 100%; border-radius: 28px; background: #f6f1e8; overflow: hidden; }
+  .khead { background: #fff; border-bottom: 2px solid var(--line); padding: 20px 30px; display: flex; align-items: center; justify-content: space-between; }
+  .khead b { display: block; font-size: 32px; font-weight: 800; letter-spacing: -.5px; } .khead span { font-size: 22px; color: var(--mute); font-weight: 600; }
+  .live { display: flex; align-items: center; gap: 10px; background: var(--green-soft); color: #076a49; font-size: 22px; font-weight: 800; padding: 8px 20px; border-radius: 999px; }
+  .live i { width: 14px; height: 14px; border-radius: 50%; background: var(--green); }
+  .kcards { padding: 18px 30px; }
+  .kc { background: #fff; border: 3px solid var(--line); border-radius: 24px; padding: 16px 26px; margin-bottom: 14px; position: relative; }
+  .kc.fresh { border-color: var(--amber); box-shadow: 0 0 0 7px rgba(255,184,28,.4); }
+  .kc.served { filter: opacity(.45); }
+  .kc h5 { font-size: 34px; font-weight: 800; display: flex; justify-content: space-between; align-items: baseline; }
+  .kc h5 small { font-size: 21px; color: var(--mute); font-weight: 600; } .kc h5 small b { color: #b06a00; margin-right: 10px; font-weight: 800; }
+  .kc .ki { margin-top: 6px; font-size: 27px; font-weight: 600; display: flex; gap: 12px; }
+  .kc .ki b { width: 50px; flex: none; font-weight: 800; } .kc .ki em { font-style: normal; color: #a25a00; font-weight: 700; }
+  .kc .kn { margin-top: 12px; background: var(--amber-soft); color: #6b4700; border-radius: 14px; padding: 8px 18px; font-size: 23px; font-weight: 700; }
+  .kc .kb { margin-top: 12px; height: 52px; border-radius: 16px; background: var(--ink); color: #fff; font-size: 25px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .kc .ks { display: none; margin-top: 12px; font-size: 23px; font-weight: 700; color: var(--mute); }
+  .kc.served .kb { display: none; } .kc.served .ks { display: block; }
+
+  /* ---------- profile card ---------- */
+  .profile { width: 400px; background: #fff; border: 4px solid var(--ink); border-radius: 28px; box-shadow: 10px 10px 0 var(--ink); padding: 26px; }
+  .profile h4 { font-size: 30px; font-weight: 800; }
+  .chip { margin-top: 14px; display: flex; align-items: center; gap: 12px; background: #f4f1ff; border-radius: 16px; padding: 12px 18px; font-size: 25px; font-weight: 700; }
+  .places { margin-top: 22px; padding-top: 18px; border-top: 3px dashed var(--line); font-size: 21px; font-weight: 700; color: var(--mute); }
+  .places div { margin-top: 12px; display: flex; gap: 10px; } .places span { flex: 1; text-align: center; background: #faf3e7; color: var(--ink); border-radius: 12px; padding: 9px 4px; font-size: 18px; }
+  .places span.now { background: var(--violet); color: #fff; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 · hook -->
+<section class="scene dark" id="s1" data-start="0" data-end="7.5">
+  <div class="blob" data-beat=".05" style="width:900px;height:900px;left:-300px;top:-380px;background:#2a1e18"></div>
+  <div class="blob" data-beat=".05" style="width:700px;height:700px;right:-220px;bottom:-300px;background:#2a1e18"></div>
+  <div class="center">
+    <div class="hook" data-in=".1" data-out="3.45">Every restaurant has a menu.</div>
+    <div class="hook o" data-in="1.875" data-fx="pop" data-out="3.45">None of them can talk.</div>
+  </div>
+  <div class="center">
+    <div class="logo" data-in="3.75" data-fx="pop">
+      <div class="mark"><span style="left:26px;top:26px;width:42px;height:42px"></span><span style="right:26px;top:26px;width:42px;height:42px"></span><span style="left:26px;bottom:26px;width:42px;height:42px"></span><span style="right:26px;bottom:26px;width:42px;height:42px;border-radius:21px 21px 21px 4px"></span></div>
+      <div class="word">QR Ordering Agent</div>
+    </div>
+    <div class="tag"><span data-in="5.625" data-fx="pop">Scan.</span><span data-in="6.09" data-fx="pop">Chat.</span><span data-in="6.56" data-fx="pop">Order.</span></div>
+  </div>
+</section>
+
+<!-- 2 · owner pastes a link -->
+<section class="scene" id="s2" data-start="7.5" data-end="15" style="--accent:var(--orange)">
+  <div class="blob" data-beat=".04" style="width:1000px;height:1000px;right:-260px;top:-120px;background:#ffe2cf"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>01</b>Restaurant owner</div>
+    <h1 data-in=".2">Paste your <em>website.</em></h1>
+    <p data-in=".4">We read the site and its menu photos, then build the menu for you.</p>
+    <div class="facts">
+      <div class="fact" data-in="3.75" data-fx="left">🏷️ Dietary tags and allergens added</div>
+      <div class="fact" data-in="5.625" data-fx="left">🔳 One QR code per table</div>
+    </div>
+  </div>
+  <div class="viz">
+    <div class="browser" data-in=".15">
+      <div class="bar"><i></i><i></i><i></i><span>sg-opus-dev-day.vercel.app</span></div>
+      <div class="body">
+        <h3>Set up your restaurant</h3>
+        <div class="urlrow">
+          <div class="input"><span data-type=".45,1.15">https://kopisatayhouse.sg</span></div>
+          <div class="btn" data-class="1.7:pressed,1.95:-pressed">Create QR</div>
+        </div>
+        <div class="cols">
+          <ul class="steps2">
+            <li data-in="1.875" data-fx="left" data-class="2.8:done"><span class="dot"><span class="ring" data-spin></span><span class="tick">✓</span></span>Reading site</li>
+            <li data-in="2.8" data-fx="left" data-class="3.75:done"><span class="dot"><span class="ring" data-spin></span><span class="tick">✓</span></span>Found 6 photos</li>
+            <li data-in="3.75" data-fx="left" data-class="5.625:done"><span class="dot"><span class="ring" data-spin></span><span class="tick">✓</span></span>Extracting 24 items</li>
+            <li data-in="5.625" data-fx="left" class="done"><span class="dot"><span class="tick">✓</span></span>QR ready</li>
+          </ul>
+          <div class="result">
+            <div data-show="0,5.5">
+              <div class="photos">
+                <div data-in="2.8" data-fx="pop">🍢</div><div data-in="2.9" data-fx="pop">🍛</div><div data-in="3.0" data-fx="pop">🍜</div><div data-in="3.1" data-fx="pop">🥗</div><div data-in="3.2" data-fx="pop">🍞</div><div data-in="3.3" data-fx="pop">☕</div>
+              </div>
+              <div class="rows">
+                <div class="row" data-in="3.8" data-fx="left">🍢 Chicken Satay <i class="tagc a">peanuts</i><span>$9.00</span></div>
+                <div class="row" data-in="4.15" data-fx="left">🍛 Nasi Lemak <i class="tagc">halal</i><span>$6.50</span></div>
+                <div class="row" data-in="4.5" data-fx="left">🍜 Laksa <i class="tagc a">shellfish</i><span>$8.00</span></div>
+                <div class="row" data-in="4.85" data-fx="left">🥗 Gado Gado <i class="tagc">vegetarian</i><span>$7.50</span></div>
+              </div>
+            </div>
+            <div class="qrcard" data-in="5.625" data-fx="pop"><div class="qr"></div><b>Table 12</b><small>Kopi &amp; Satay House</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · diner scans -->
+<section class="scene" id="s3" data-start="15" data-end="22.5" style="--accent:var(--green)">
+  <div class="blob" data-beat=".04" style="width:1000px;height:1000px;right:-200px;top:-200px;background:#d3f3e5"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>02</b>Diner</div>
+    <h1 data-in=".2">Scan at the <em>table.</em></h1>
+    <p data-in=".4">No app, no login. The menu opens with your table number already set.</p>
+    <div class="facts">
+      <div class="fact" data-in="3.75" data-fx="left">⚠️ “May contain” shown on every dish</div>
+    </div>
+  </div>
+  <div class="viz">
+    <div data-in=".15" data-fx="pop"><div class="qrcard tent"><div class="qr"></div><b>Table 12</b><small>Scan to order</small></div></div>
+    <div class="phone" data-in=".3" data-fx="right">
+      <div class="notch"></div>
+      <div class="callout" data-in="5.625" data-fx="pop" style="right:400px;top:86px">Table set by the QR</div>
+      <div class="screen">
+        <div class="cam" data-show="0,1.875">
+          <div class="frame"><div class="qr"></div><div class="beam" id="beam"></div></div>
+          <p>Point at the QR code</p>
+        </div>
+        <div class="flash" id="flash"></div>
+        <div class="apphead"><b>Kopi &amp; Satay House</b><span>Dine-in · <u>Table 12</u></span></div>
+        <div class="menu">
+          <div class="cat" data-in="1.95" data-fx="fade">Grill</div>
+          <div class="item" data-in="2.0"><div class="em">🍢</div><div class="t"><div class="n"><span>Chicken Satay</span><span>$9.00</span></div><div class="tags"><i class="tagc">halal</i><i class="tagc a">may contain: peanuts, soy</i></div></div></div>
+          <div class="cat" data-in="2.2" data-fx="fade">Mains</div>
+          <div class="item" data-in="2.25"><div class="em">🍛</div><div class="t"><div class="n"><span>Nasi Lemak</span><span>$6.50</span></div><div class="tags"><i class="tagc">halal</i><i class="tagc">spicy</i><i class="tagc a">may contain: peanuts, egg, fish</i></div></div></div>
+          <div class="item" data-in="2.5"><div class="em">🥗</div><div class="t"><div class="n"><span>Gado Gado</span><span>$7.50</span></div><div class="tags"><i class="tagc">vegetarian</i><i class="tagc a">may contain: peanuts, soy, egg</i></div></div></div>
+          <div class="item" data-in="2.75"><div class="em">🍜</div><div class="t"><div class="n"><span>Laksa</span><span>$8.00</span></div><div class="tags"><i class="tagc">spicy</i><i class="tagc a">may contain: shellfish, fish</i></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · chat -->
+<section class="scene" id="s4" data-start="22.5" data-end="30" style="--accent:var(--orange)">
+  <div class="blob" data-beat=".04" style="width:1000px;height:1000px;right:-240px;bottom:-300px;background:#ffe2cf"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>03</b>Diner + agent</div>
+    <h1 data-in=".2">Just <em>ask.</em></h1>
+    <p data-in=".4">The agent knows the whole menu. It answers questions and builds your cart as you chat.</p>
+  </div>
+  <div class="viz">
+    <div class="phone" data-in=".15">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="apphead"><b>Kopi &amp; Satay House</b><span>Dine-in · Table 12</span></div>
+        <div class="chat">
+          <div class="msg ai" data-in=".3" data-fx="grow">Hi! What can I get you at Table 12?</div>
+          <div class="msg me" data-in=".94" data-fx="grow">Two chicken satay, sauce on the side</div>
+          <div class="msg ev" data-in="1.875" data-fx="grow">Added 2× Chicken Satay</div>
+          <div class="msg ai" data-in="2.1" data-fx="grow">Done! Heads up: the sauce has peanuts.</div>
+          <div class="msg me" data-in="3.75" data-fx="grow">What’s good without peanuts?</div>
+          <div class="msg ai" data-in="4.69" data-fx="grow">Nasi Lemak, if we leave the peanuts off. Want one?</div>
+          <div class="msg me" data-in="5.625" data-fx="grow">Yes, one please</div>
+          <div class="msg ev" data-in="6.09" data-fx="grow">Added 1× Nasi Lemak</div>
+        </div>
+        <div class="inbar">Message…<div class="mic">🎙</div></div>
+      </div>
+    </div>
+    <div class="cart" data-in=".3" data-fx="right">
+      <h4>Your cart <span>live</span></h4>
+      <div class="empty" data-show="0,1.875">Nothing yet. Just tell the agent.</div>
+      <div class="line" data-in="1.875" data-fx="grow"><span class="q">2×</span><div>Chicken Satay<small>sauce on the side</small></div><span class="pr">$18.00</span></div>
+      <div class="line" data-in="6.09" data-fx="grow"><span class="q">1×</span><div>Nasi Lemak<small>no peanuts</small></div><span class="pr">$6.50</span></div>
+      <div class="total" data-in="1.875" data-fx="fade"><span>Total</span><span><span data-show="0,6.09">$18.00</span><span data-show="6.09,99">$24.50</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · confirm -->
+<section class="scene" id="s5" data-start="30" data-end="37.5" style="--accent:var(--green)">
+  <div class="blob" data-beat=".04" style="width:1000px;height:1000px;right:-200px;top:-260px;background:#d3f3e5"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>04</b>Diner</div>
+    <h1 data-in=".2">Confirm. <em>Sent.</em></h1>
+    <p data-in=".4">The agent reads the order back. Nothing is sent until you tap confirm.</p>
+    <div class="facts">
+      <div class="fact" data-in="4.69" data-fx="left">💵 No payment step: pay at the counter</div>
+    </div>
+  </div>
+  <div class="viz">
+    <div class="phone" data-in=".15">
+      <div class="notch"></div>
+      <div class="tap" id="tap5" style="left:215px;top:782px;opacity:0"></div>
+      <div class="screen">
+        <div class="apphead"><b>Kopi &amp; Satay House</b><span>Dine-in · Table 12</span></div>
+        <div class="chat" style="justify-content:flex-start;padding-top:6px">
+          <div class="msg ev">Added 1× Nasi Lemak</div>
+          <div class="msg ai" data-in=".47" data-fx="grow">That’s 2× Chicken Satay and 1× Nasi Lemak for Table 12. Shall I send it?</div>
+          <div class="msg me" data-in="1.4" data-fx="grow">Yes!</div>
+        </div>
+        <div class="sheet" data-in="1.875" data-fx="rise">
+          <h4>Review your order</h4>
+          <div class="line"><span class="q">2×</span><div>Chicken Satay<small>sauce on the side</small></div><span class="pr">$18.00</span></div>
+          <div class="line"><span class="q">1×</span><div>Nasi Lemak<small>no peanuts</small></div><span class="pr">$6.50</span></div>
+          <div class="total"><span>Total</span><span>$24.50</span></div>
+          <div class="note">Table 12 · Pay at the counter</div>
+          <div class="cta" data-class="3.55:pressed">Confirm order</div>
+        </div>
+        <div class="placed" data-in="3.75" data-fx="fade" data-dur=".2">
+          <div class="ok" data-in="3.75" data-fx="pop">✓</div>
+          <b>Order placed</b><span>Table 12 · $24.50</span><em>Pay at the counter</em>
+        </div>
+      </div>
+    </div>
+    <div id="confetti"></div>
+  </div>
+</section>
+
+<!-- 6 · kitchen -->
+<section class="scene" id="s6" data-start="37.5" data-end="45" style="--accent:var(--amber)">
+  <div class="blob" data-beat=".04" style="width:1100px;height:1100px;right:-260px;top:-200px;background:#ffecb8"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>05</b>Kitchen</div>
+    <h1 data-in=".2">Straight to the <em style="color:#e09a00">kitchen.</em></h1>
+    <p data-in=".4">Orders appear on the kitchen screen by themselves, with every note.</p>
+    <div class="facts">
+      <div class="fact" data-in="2.4" data-fx="left">⏱️ Shows up in about 2 seconds</div>
+      <div class="fact" data-in="3.75" data-fx="left">🔒 Only this restaurant, no diner data</div>
+    </div>
+  </div>
+  <div class="viz">
+    <div class="tablet" data-in=".15">
+      <div class="screen" style="position:relative">
+        <div class="tap" id="tap6" style="left:432px;top:382px;opacity:0"></div>
+        <div class="khead">
+          <div><b>Kopi &amp; Satay House</b><span>Kitchen · <span data-show="0,1.875">1 waiting</span><span data-show="1.875,5.625">2 waiting</span><span data-show="5.625,99">1 waiting</span></span></div>
+          <div class="live"><i data-beat=".5"></i>Live</div>
+        </div>
+        <div class="kcards">
+          <div class="kc" data-in="1.875" data-fx="grow" data-h="330" data-class="1.875:fresh,5.625:-fresh,5.625:served">
+            <h5>Table 12 <small><b data-show="0,5.625">New</b>just now</small></h5>
+            <div class="ki"><b>2×</b><span>Chicken Satay <em>(sauce on the side)</em></span></div>
+            <div class="ki"><b>1×</b><span>Nasi Lemak <em>(no peanuts)</em></span></div>
+            <div class="kn">Note: peanut allergy at the table</div>
+            <div class="kb">Mark served</div><div class="ks">Served</div>
+          </div>
+          <div class="kc">
+            <h5>Pickup <small>6 min ago</small></h5>
+            <div class="ki"><b>1×</b><span>Gado Gado <em>(no egg)</em></span></div>
+            <div class="kb">Mark served</div>
+          </div>
+          <div class="kc served">
+            <h5>Table 4 <small>18 min ago</small></h5>
+            <div class="ki"><b>3×</b><span>Nasi Lemak</span></div>
+            <div class="ks">Served</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · memory + voice -->
+<section class="scene" id="s7" data-start="45" data-end="52.5" style="--accent:var(--violet)">
+  <div class="blob" data-beat=".04" style="width:1000px;height:1000px;right:-240px;bottom:-280px;background:#e3dfff"></div>
+  <div class="copy">
+    <div class="pill" data-in=".1"><b>06</b>Next visit, new place</div>
+    <h1 data-in=".2">It <em>remembers</em> you.</h1>
+    <p data-in=".4">Your preferences follow you to every restaurant. Type it, or just say it.</p>
+  </div>
+  <div class="viz">
+    <div class="phone" data-in=".15">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="apphead"><b>Thai Corner</b><span>Dine-in · Table 7</span></div>
+        <div class="chat">
+          <div class="msg ai" data-in=".47" data-fx="grow">Welcome back! 👋 I remember: no peanuts.</div>
+          <div class="msg ai" data-in="1.4" data-fx="grow">I’d skip the Pad Thai. The Green Curry is safe for you.</div>
+          <div class="msg me" data-in="4.69" data-fx="grow">🎙 “My usual iced tea, please”</div>
+          <div class="msg ev" data-in="5.625" data-fx="grow">Added 1× Thai Iced Tea</div>
+          <div class="msg ai" data-in="5.85" data-fx="grow">One Thai iced tea, coming up 🧋</div>
+        </div>
+        <div class="inbar">Message…
+          <div class="wave" id="wave" data-show="3.75,4.69"></div>
+          <div class="halo" id="halo"></div>
+          <div class="mic" data-class="3.75:live,4.69:-live">🎙</div>
+        </div>
+      </div>
+    </div>
+    <div class="profile" data-in="1.875" data-fx="right">
+      <h4>Your taste profile</h4>
+      <div class="chip" data-in="2.1" data-fx="pop">🥜 No peanuts</div>
+      <div class="chip" data-in="2.34" data-fx="pop">🌶️ Loves spicy</div>
+      <div class="chip" data-in="2.58" data-fx="pop">🧋 Usual: Thai iced tea</div>
+      <div class="places" data-in="2.9" data-fx="fade">Follows you everywhere
+        <div><span>Kopi &amp; Satay</span><span class="now">Thai Corner</span><span>Next place</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · outro -->
+<section class="scene dark" id="s8" data-start="52.5" data-end="60">
+  <div class="blob" data-beat=".05" style="width:900px;height:900px;left:-300px;bottom:-380px;background:#2a1e18"></div>
+  <div class="blob" data-beat=".05" style="width:700px;height:700px;right:-220px;top:-300px;background:#2a1e18"></div>
+  <div class="center">
+    <div class="recap" data-in="0" data-fx="fade" data-dur=".1" data-out="3.45">
+      <div class="r" data-in=".1" data-fx="pop"><div>🔗</div>Paste</div><div class="a" data-in=".47" data-fx="fade">→</div>
+      <div class="r" data-in=".57" data-fx="pop"><div>📱</div>Scan</div><div class="a" data-in=".94" data-fx="fade">→</div>
+      <div class="r" data-in="1.04" data-fx="pop"><div>💬</div>Chat</div><div class="a" data-in="1.41" data-fx="fade">→</div>
+      <div class="r" data-in="1.51" data-fx="pop"><div>🍳</div>Served</div>
+    </div>
+  </div>
+  <div class="center">
+    <div class="logo" data-in="3.75" data-fx="pop">
+      <div class="mark"><span style="left:26px;top:26px;width:42px;height:42px"></span><span style="right:26px;top:26px;width:42px;height:42px"></span><span style="left:26px;bottom:26px;width:42px;height:42px"></span><span style="right:26px;bottom:26px;width:42px;height:42px;border-radius:21px 21px 21px 4px"></span></div>
+      <div class="word">QR Ordering Agent</div>
+    </div>
+    <div class="tag"><span data-in="4.22" data-fx="pop">Scan.</span><span data-in="4.69" data-fx="pop">Chat.</span><span data-in="5.16" data-fx="pop">Order.</span></div>
+    <div class="foot" data-in="5.625" data-fx="fade">Built at SG Opus Dev Day · github.com/tanveerriaz/sg-opus-dev-day</div>
+  </div>
+</section>
+
+<div id="stepper">
+  <div class="track"></div><div class="fill"></div>
+  <div class="steps"><div class="st"><i></i>Paste</div><div class="st"><i></i>Scan</div><div class="st"><i></i>Chat</div><div class="st"><i></i>Confirm</div><div class="st"><i></i>Kitchen</div><div class="st"><i></i>Remember</div></div>
+</div>
+<div id="wipe2"></div><div id="wipe"></div>
+</div>
+
+<script>
+const BEAT = 0.46875, DURATION = 60;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = (p) => 1 - Math.pow(1 - p, 3);
+const back = (p) => 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+const FX = {
+  up: (el, p) => { el.style.opacity = easeOut(p); el.style.transform = `translateY(${(1 - easeOut(p)) * 40}px)`; },
+  fade: (el, p) => { el.style.opacity = p; },
+  pop: (el, p) => { el.style.opacity = clamp(p * 3); el.style.transform = `scale(${0.5 + 0.5 * back(p)})`; },
+  left: (el, p) => { el.style.opacity = easeOut(p); el.style.transform = `translateX(${-(1 - easeOut(p)) * 60}px)`; },
+  right: (el, p) => { el.style.opacity = easeOut(p); el.style.transform = `translateX(${(1 - easeOut(p)) * 160}px)`; },
+  rise: (el, p) => { el.style.opacity = 1; el.style.transform = `translateY(${(1 - easeOut(p)) * 105}%)`; },
+  // Grows from nothing so the things below it slide out of the way.
+  grow: (el, p, d) => {
+    const e = easeOut(p), h = +(d.h || 200);
+    el.style.opacity = clamp(p * 2);
+    el.style.transform = `scale(${0.85 + 0.15 * back(p)})`;
+    if (p < 1) { el.style.maxHeight = e * h + "px"; el.style.overflow = "hidden"; el.style.marginTop = el.style.marginBottom = ""; el.style.paddingTop = el.style.paddingBottom = ""; if (e < 0.25) { el.style.paddingTop = el.style.paddingBottom = "0"; } }
+    else { el.style.maxHeight = "none"; el.style.overflow = "visible"; el.style.paddingTop = el.style.paddingBottom = ""; }
+  },
+};
+
+const scenes = $$(".scene").map((el) => ({ el, id: el.id, start: +el.dataset.start, end: +el.dataset.end }));
+$$("[data-type]").forEach((el) => { el.dataset.full = el.textContent; });
+$$("[data-in]").forEach((el) => { el.dataset.disp = getComputedStyle(el).display === "none" ? "block" : ""; });
+
+// Scene-specific touches.
+const wave = document.getElementById("wave");
+for (let i = 0; i < 22; i++) wave.appendChild(document.createElement("i"));
+const confetti = document.getElementById("confetti");
+const rand = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const COLORS = ["#ff5a2c", "#ffb81c", "#0fae78", "#6b5cf6", "#ffffff"];
+for (let i = 0; i < 70; i++) { const c = document.createElement("i"); c.style.background = COLORS[i % 5]; confetti.appendChild(c); }
+
+function tapRing(el, lt, at) {
+  const p = clamp((lt - (at - 0.3)) / 0.6);
+  el.style.opacity = p <= 0 || p >= 1 ? 0 : 1 - Math.abs(p - 0.5) * 1.2;
+  el.style.transform = `scale(${0.5 + p * 0.9})`;
+}
+
+const hooks = {
+  s3(lt) {
+    const sweep = (lt - 0.5) / 1.3;
+    document.getElementById("beam").style.top = (0.5 - 0.5 * Math.cos(clamp(sweep) * Math.PI * 3)) * 262 + "px";
+    document.getElementById("flash").style.opacity = clamp(1 - Math.abs(lt - 1.875) / 0.22);
+  },
+  s5(lt) {
+    tapRing(document.getElementById("tap5"), lt, 3.55);
+    const ct = lt - 3.75;
+    [...confetti.children].forEach((c, i) => {
+      if (ct < 0) { c.style.opacity = 0; return; }
+      const ang = rand(i) * Math.PI * 2, speed = 500 + rand(i + 99) * 900;
+      const x = 480 + Math.cos(ang) * speed * ct * (1 - ct * 0.12);
+      const y = 430 + Math.sin(ang) * speed * ct - 250 * ct + 620 * ct * ct;
+      c.style.opacity = clamp(1.6 - ct * 0.55);
+      c.style.transform = `translate(${x}px, ${y}px) rotate(${ct * (300 + rand(i + 7) * 500)}deg)`;
+    });
+  },
+  s6(lt) { tapRing(document.getElementById("tap6"), lt, 5.625); },
+  s7(lt, t) {
+    [...wave.children].forEach((b, i) => { b.style.height = 8 + Math.abs(Math.sin(t * 13 + i * 1.7) * Math.sin(t * 5 + i * 0.6)) * 38 + "px"; });
+    const on = lt >= 3.75 && lt < 4.69, ph = ((lt - 3.75) / 0.47) % 1;
+    const halo = document.getElementById("halo");
+    halo.style.opacity = on ? 0.45 * (1 - ph) : 0;
+    halo.style.transform = `scale(${1 + ph * 1.6})`;
+  },
+};
+
+const WIPES = ["#ff5a2c", "#0fae78", "#ff5a2c", "#0fae78", "#ffb81c", "#6b5cf6", "#ff5a2c"];
+const wipe = document.getElementById("wipe"), wipe2 = document.getElementById("wipe2");
+const stepper = document.getElementById("stepper"), fill = stepper.querySelector(".fill"), sts = $$(".st", stepper);
+
+window.render = function render(t) {
+  t = clamp(t, 0, DURATION - 1e-4);
+  const pulse = Math.exp(-((t / BEAT) % 1) * 5);
+
+  for (const scene of scenes) {
+    const active = t >= scene.start && t < scene.end;
+    scene.el.style.display = active ? "block" : "none";
+    if (!active) continue;
+    const lt = t - scene.start;
+
+    for (const el of $$("[data-in]", scene.el)) {
+      const d = el.dataset, tin = +d.in, dur = +(d.dur || 0.5);
+      if (lt < tin) { el.style.display = d.fx === "grow" ? "none" : ""; el.style.visibility = "hidden"; continue; }
+      el.style.display = ""; el.style.visibility = "visible";
+      FX[d.fx || "up"](el, clamp((lt - tin) / dur), d);
+      if (d.out !== undefined) {
+        const q = clamp((lt - +d.out) / 0.3);
+        el.style.opacity = +el.style.opacity * (1 - q);
+        if (q >= 1) el.style.visibility = "hidden";
+      }
+    }
+    for (const el of $$("[data-show]", scene.el)) {
+      const [a, b] = el.dataset.show.split(",").map(Number);
+      el.style.display = lt >= a && lt < b ? "" : "none";
+    }
+    for (const el of $$("[data-class]", scene.el)) {
+      for (const rule of el.dataset.class.split(",")) {
+        const [at, name] = rule.split(":");
+        if (name.startsWith("-")) { if (lt >= +at) el.classList.remove(name.slice(1)); }
+        else el.classList.toggle(name, lt >= +at);
+      }
+    }
+    for (const el of $$("[data-type]", scene.el)) {
+      const [a, dur] = el.dataset.type.split(",").map(Number), full = el.dataset.full;
+      const n = Math.round(clamp((lt - a) / dur) * full.length);
+      el.innerHTML = full.slice(0, n) + (n < full.length || lt < a + dur + 0.4 ? '<i class="caret"></i>' : "");
+    }
+    for (const el of $$("[data-spin]", scene.el)) el.style.transform = `rotate(${t * 540}deg)`;
+    for (const el of $$("[data-beat]", scene.el)) el.style.transform = `scale(${1 + +el.dataset.beat * pulse})`;
+    hooks[scene.id]?.(lt, t);
+  }
+
+  // Journey tracker under scenes 2 to 7.
+  const journey = (t - 7.5) / 7.5;
+  stepper.style.display = journey >= 0 && journey < 6 ? "block" : "none";
+  const idx = Math.floor(journey);
+  sts.forEach((st, i) => { st.classList.toggle("on", i === idx); st.classList.toggle("done", i < idx); });
+  fill.style.width = Math.min(1680, 100 + clamp(journey, 0, 5) * 296) + "px";
+
+  // Colour wipe across each scene change.
+  let x = -100, x2 = -100, color = WIPES[0];
+  for (let i = 1; i < scenes.length; i++) {
+    const u = (t - (scenes[i].start - 0.27)) / 0.54;
+    if (u > 0 && u < 1) { x = (u * 2 - 1) * 100; x2 = (clamp(u * 1.15) * 2 - 1) * 100 - 6 * (u < 0.5 ? 1 : -1); color = WIPES[i - 1]; }
+  }
+  wipe.style.transform = `translateX(${x}%)`; wipe.style.background = color;
+  wipe2.style.transform = `translateX(${x2}%)`; wipe2.style.background = "#1c1410";
+};
+
+window.setQR = (svg) => $$(".qr").forEach((el) => { el.innerHTML = svg; });
+render(+new URLSearchParams(location.search).get("t") || 0);
+</script>
+</body>
+</html>
