@@ -1,5 +1,28 @@
 @import "tailwindcss";
-
-body {
-  @apply bg-stone-50 text-stone-900 antialiased;
+@theme {
+  --color-canvas: #fff8ec;
+  --color-surface: #fffdfa;
+  --color-soft: #f5eddf;
+  --color-ink: #30231e;
+  --color-muted: #7a6a5d;
+  --color-line: #d9cbbb;
+  --color-control: #9b8270;
+  --color-action: #c64a27;
+  --color-action-hover: #a9431e;
+  --color-on-action: #fffdfa;
+  --color-sage: #dce4d8;
+  --color-sage-ink: #3b624c;
+  --color-warning: #fff0ce;
+  --color-warning-ink: #78400e;
+  --color-danger: #fbe5de;
+  --color-danger-ink: #9d2f22;
 }
+
+body { @apply bg-canvas text-ink antialiased; font-family: Arial, Helvetica, sans-serif; }
+button, input, select { min-height:44px; }
+button, a, input, textarea, select { transition:background-color 160ms,color 160ms; }
+button:not(:disabled), a { cursor:pointer; }
+:focus-visible { outline:3px solid var(--color-sage-ink); outline-offset:3px; }
+.grub-button { @apply rounded-xl bg-action px-4 py-3 font-semibold text-on-action; }
+.grub-button:hover { @apply bg-action-hover; }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }

@@ -28,9 +28,9 @@ export function QrCard({ restaurant, fromSavedCopy }: Props) {
   }, [restaurant.id, mode, table]);
 
   return (
-    <section className="mt-6 rounded-2xl border border-stone-200 bg-white p-5">
+    <section className="mt-6 rounded-2xl border border-line bg-surface p-5">
       <h2 className="text-lg font-semibold">{restaurant.name}</h2>
-      <p className="text-sm text-stone-500">
+      <p className="text-sm text-muted">
         {restaurant.itemCount} menu items
         {/* Tell owners when the saved menu was used. */}
         {fromSavedCopy && " · saved copy"}
@@ -41,7 +41,7 @@ export function QrCard({ restaurant, fromSavedCopy }: Props) {
           aria-label="Order mode"
           value={mode}
           onChange={(e) => setMode(e.target.value as Mode)}
-          className="rounded-lg border border-stone-300 px-2 py-1.5"
+          className="rounded-xl border border-control px-2 py-1.5"
         >
           <option value="table">Dine-in</option>
           <option value="pickup">Pickup</option>
@@ -53,7 +53,7 @@ export function QrCard({ restaurant, fromSavedCopy }: Props) {
             <input
               value={table}
               onChange={(e) => setTable(e.target.value)}
-              className="w-16 rounded-lg border border-stone-300 px-2 py-1.5"
+              className="w-16 rounded-xl border border-control px-2 py-1.5"
             />
           </label>
         )}

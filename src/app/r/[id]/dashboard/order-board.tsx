@@ -81,10 +81,10 @@ export function OrderBoard({ restaurantId, restaurantName, initialOrders, initia
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-stone-200 bg-stone-50/95 px-4 py-3 backdrop-blur">
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-canvas/95 px-4 py-3 backdrop-blur">
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{restaurantName}</h1>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-muted">
             Kitchen · {waiting === 0 ? "nothing waiting" : `${waiting} waiting`}
           </p>
         </div>
@@ -100,7 +100,7 @@ export function OrderBoard({ restaurantId, restaurantName, initialOrders, initia
       </header>
 
       {orders.length === 0 ? (
-        <p className="px-4 pt-16 text-center text-stone-500">No orders yet. New ones appear here on their own.</p>
+        <p className="px-4 pt-16 text-center text-muted">No orders yet. New ones appear here on their own.</p>
       ) : (
         <ol className="space-y-3 px-4 pt-4">
           {orders.map((order) => (
@@ -133,13 +133,13 @@ function OrderCard({
 
   return (
     <li
-      className={`rounded-xl border bg-white p-4 shadow-sm transition ${
-        fresh ? "border-amber-400 ring-2 ring-amber-300" : "border-stone-200"
+      className={`rounded-xl border bg-surface p-4 shadow-sm transition ${
+        fresh ? "border-amber-400 ring-2 ring-amber-300" : "border-line"
       } ${served ? "opacity-50" : ""}`}
     >
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-lg font-bold">{describeWhere(order)}</h2>
-        <span className="shrink-0 text-sm tabular-nums text-stone-500">
+        <span className="shrink-0 text-sm tabular-nums text-muted">
           {fresh && <span className="mr-2 font-semibold text-amber-700">New</span>}
           {now !== null && describeAge(order.created_at, now)}
         </span>
@@ -158,17 +158,17 @@ function OrderCard({
       </ul>
 
       {order.notes && (
-        <p className="mt-3 rounded-lg bg-amber-100 px-3 py-2 text-sm text-amber-900">Note: {order.notes}</p>
+        <p className="mt-3 rounded-xl bg-amber-100 px-3 py-2 text-sm text-warning-ink">Note: {order.notes}</p>
       )}
 
       {served ? (
-        <p className="mt-3 text-sm font-medium text-stone-500">Served</p>
+        <p className="mt-3 text-sm font-medium text-muted">Served</p>
       ) : (
         onServed && (
           <button
             type="button"
             onClick={onServed}
-            className="mt-3 w-full rounded-lg bg-stone-900 px-4 py-2 font-medium text-white active:bg-stone-700"
+            className="mt-3 w-full rounded-xl bg-action px-4 py-2 font-medium text-on-action active:bg-stone-700"
           >
             Mark served
           </button>

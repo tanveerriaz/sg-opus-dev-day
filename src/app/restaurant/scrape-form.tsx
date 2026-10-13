@@ -77,8 +77,8 @@ export function ScrapeForm() {
   return (
     <div className="mt-6">
       <div className="mb-4 flex gap-2" aria-label="Menu source">
-        <button type="button" aria-pressed={source === "website"} disabled={running} onClick={() => { setSource("website"); setState({ status: "idle" }); }} className={`rounded-lg px-3 py-2 text-sm ${source === "website" ? "bg-stone-900 text-white" : "bg-stone-100"}`}>Website URL</button>
-        <button type="button" aria-pressed={source === "photos"} disabled={running} onClick={() => { setSource("photos"); setState({ status: "idle" }); }} className={`rounded-lg px-3 py-2 text-sm ${source === "photos" ? "bg-stone-900 text-white" : "bg-stone-100"}`}>Upload menu photos</button>
+        <button type="button" aria-pressed={source === "website"} disabled={running} onClick={() => { setSource("website"); setState({ status: "idle" }); }} className={`rounded-xl px-3 py-2 text-sm ${source === "website" ? "bg-action text-on-action" : "bg-soft"}`}>Website URL</button>
+        <button type="button" aria-pressed={source === "photos"} disabled={running} onClick={() => { setSource("photos"); setState({ status: "idle" }); }} className={`rounded-xl px-3 py-2 text-sm ${source === "photos" ? "bg-action text-on-action" : "bg-soft"}`}>Upload menu photos</button>
       </div>
       <form onSubmit={scrape} className="flex flex-col gap-3">
         {source === "website" ? (
@@ -91,24 +91,24 @@ export function ScrapeForm() {
           placeholder="www.your-restaurant.com"
           required
           disabled={running}
-          className="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2"
+          className="min-w-0 flex-1 rounded-xl border border-control bg-surface px-3 py-2"
         />
         ) : (
           <>
             <label className="text-sm">Restaurant name (optional)
-              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} disabled={running} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} disabled={running} className="mt-1 w-full rounded-xl border border-control px-3 py-2" />
             </label>
             <label className="text-sm">Menu photos
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple required disabled={running} onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} className="mt-1 block w-full rounded-lg border border-dashed border-stone-300 p-3" />
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple required disabled={running} onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} className="mt-1 block w-full rounded-xl border border-dashed border-control p-3" />
             </label>
-            <p className="text-xs text-stone-500">JPG, PNG or WebP · Up to 8 photos, 3 MB total. Include readable item names and prices. Photos are sent to OpenAI to read the menu; the app saves the extracted menu, not the photos.</p>
+            <p className="text-xs text-muted">JPG, PNG or WebP · Up to 8 photos, 3 MB total. Include readable item names and prices. Photos are sent to OpenAI to read the menu; the app saves the extracted menu, not the photos.</p>
             {photos.length > 0 && <p className="text-sm">{photos.length} photo{photos.length === 1 ? "" : "s"} selected</p>}
           </>
         )}
         <button
           type="submit"
           disabled={running}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-white disabled:opacity-50"
+          className="rounded-xl bg-action px-4 py-2 text-on-action disabled:opacity-50"
         >
           {running ? "Reading…" : "Get QR"}
         </button>
@@ -119,7 +119,7 @@ export function ScrapeForm() {
           {state.steps.map((step, i) => {
             const current = running && i === state.steps.length - 1;
             return (
-              <li key={i} className={current ? "text-stone-900" : "text-stone-500"}>
+              <li key={i} className={current ? "text-ink" : "text-muted"}>
                 <span className="mr-2 inline-block w-4">{current ? "…" : "✓"}</span>
                 {step}
               </li>
@@ -129,7 +129,7 @@ export function ScrapeForm() {
       )}
 
       {state.status === "error" && (
-        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.message}</p>
+        <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{state.message}</p>
       )}
 
       {state.status === "done" && <QrCard {...state.result} />}

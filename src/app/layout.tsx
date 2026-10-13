@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Brand } from "@/components/Brand";
 
 export const metadata: Metadata = {
-  title: "QR Ordering Agent",
+  title: "Grub · Your dining companion",
+  icons: { icon: "/grub-bear.png" },
   description: "Scan, chat, order. Your taste profile follows you.",
 };
 
@@ -14,7 +16,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><Brand />{children}</body>
     </html>
   );
 }
