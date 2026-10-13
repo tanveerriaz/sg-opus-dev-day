@@ -13,6 +13,7 @@ export type AgentTool = {
 };
 
 export const AGENT_TOOLS: AgentTool[] = [
+ {name:"save_preference",description:"Remember a diner preference across restaurants. Likes save silently. Allergies/diets require the diner to confirm on screen; ask them aloud before saving. Never infer an allergy.",parameters:{type:"object",properties:{kind:{type:"string",enum:["allergy","diet","like"]},value:{type:"string",maxLength:120}},required:["kind","value"],additionalProperties:false}},
   {
     name: "add_to_cart",
     description:
@@ -77,6 +78,7 @@ export type ToolState = { cart: Cart; menu: Menu };
 
 export type ToolOutcome = {
   cart: Cart;
+  preference?: {kind:string;value:string};
   /** Sent back to the model as the tool's result. */
   output: string;
   /** Short text for the chat transcript, e.g. "Added 2× Laksa". */
@@ -99,6 +101,10 @@ export function runTool(name: string, input: unknown, { cart, menu }: ToolState)
   const itemName = (id: unknown) => menu.items.find((i) => i.id === id)?.name ?? String(id);
 
   switch (name) {
+    case "save_preference": {
+      if (!["allergy","diet","like"].includes(String(args.kind)) || typeof args.value!=="string" || !args.value.trim() || args.value.length>120) return {cart,output:fail("Invalid preference"),isError:true};
+      return {cart,output:"Preference request received",preference:{kind:String(args.kind),value:args.value.trim()}};
+    }
     case "add_to_cart": {
       const quantity = Number(args.quantity);
       const result = addToCart(cart, menu, {

@@ -14,6 +14,7 @@ const MAX_ROUNDS = 6;
 export type TranscriptEntry = { id: number; kind: "user" | "agent" | "event" | "error"; text: string };
 
 type Options = {
+  onPreference: (p:{kind:string;value:string})=>Promise<string>;
   restaurantId: string;
   restaurantName: string;
   context: DinerContext;
@@ -24,7 +25,7 @@ type Options = {
   onReview: (review: NonNullable<ToolOutcome["review"]>) => void;
 };
 
-export function useTextAgent({ restaurantId, restaurantName, context, menu, cartRef, setCart, onReview }: Options) {
+export function useTextAgent({ restaurantId, restaurantName, context, menu, cartRef, setCart, onReview, onPreference }: Options) {
   // The greeting is shown only; the instructions tell the agent it already greeted.
   const greeting = `Hi! Welcome to ${restaurantName}. Ask me about the menu, or tell me what you'd like to order.`;
   // Append-only: earlier messages are never edited, which the API requires for thinking blocks.
@@ -82,6 +83,7 @@ export function useTextAgent({ restaurantId, restaurantName, context, menu, cart
               show("agent", block.text);
             } else if (block.type === "tool_use") {
               const outcome = runTool(block.name, block.input, { cart: cartRef.current, menu });
+              if(outcome.preference) outcome.output = await onPreference(outcome.preference);
               cartRef.current = outcome.cart;
               setCart(outcome.cart);
               results.push({
@@ -106,7 +108,7 @@ export function useTextAgent({ restaurantId, restaurantName, context, menu, cart
         setBusy(false);
       }
     },
-    [busy, cartRef, context, menu, onReview, restaurantId, setCart, show],
+    [onPreference, busy, cartRef, context, menu, onReview, restaurantId, setCart, show],
   );
 
   /** Tells the agent about something that happened on screen, with the diner's next message. */

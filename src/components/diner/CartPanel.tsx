@@ -16,9 +16,9 @@ export function CartPanel({ cart, menu, onIncrease, onDecrease, onCheckout, onBr
 
   if (items.length === 0) {
     return (
-      <div className="px-4 py-10 text-center text-stone-600">
+      <div className="px-4 py-10 text-center text-muted">
         <p>Your cart is empty.</p>
-        <button type="button" onClick={onBrowse} className="mt-3 font-medium text-stone-900 underline">
+        <button type="button" onClick={onBrowse} className="mt-3 font-medium text-ink underline">
           Ask the agent or browse the menu
         </button>
       </div>
@@ -32,15 +32,15 @@ export function CartPanel({ cart, menu, onIncrease, onDecrease, onCheckout, onBr
           <li key={`${item.item_id}-${item.notes ?? ""}`} className="flex items-center gap-3 py-3">
             <div className="min-w-0 flex-1">
               <p className="font-medium">{item.name}</p>
-              {item.notes && <p className="text-sm text-stone-600">{item.notes}</p>}
-              <p className="text-sm tabular-nums text-stone-600">{formatPrice(item.price * item.quantity, menu.currency)}</p>
+              {item.notes && <p className="text-sm text-muted">{item.notes}</p>}
+              <p className="text-sm tabular-nums text-muted">{formatPrice(item.price * item.quantity, menu.currency)}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => onDecrease(cart[i])}
                 aria-label={`One less ${item.name}`}
-                className="size-8 rounded-full border border-stone-300 text-lg leading-none"
+                className="size-8 rounded-full border border-control text-lg leading-none"
               >
                 −
               </button>
@@ -49,7 +49,7 @@ export function CartPanel({ cart, menu, onIncrease, onDecrease, onCheckout, onBr
                 type="button"
                 onClick={() => onIncrease(cart[i])}
                 aria-label={`One more ${item.name}`}
-                className="size-8 rounded-full border border-stone-300 text-lg leading-none"
+                className="size-8 rounded-full border border-control text-lg leading-none"
               >
                 +
               </button>
@@ -57,14 +57,14 @@ export function CartPanel({ cart, menu, onIncrease, onDecrease, onCheckout, onBr
           </li>
         ))}
       </ul>
-      <div className="mt-4 flex justify-between border-t border-stone-300 pt-4 text-lg font-semibold">
+      <div className="mt-4 flex justify-between border-t border-control pt-4 text-lg font-semibold">
         <span>Total</span>
         <span className="tabular-nums">{formatPrice(orderTotal(items), menu.currency)}</span>
       </div>
       <button
         type="button"
         onClick={onCheckout}
-        className="mt-4 w-full rounded-lg bg-stone-900 py-3 font-medium text-white"
+        className="mt-4 w-full rounded-xl bg-action py-3 font-medium text-on-action"
       >
         Review order
       </button>

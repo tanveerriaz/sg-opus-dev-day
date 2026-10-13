@@ -1,3 +1,4 @@
+import { profile } from "@/lib/diner-profile";
 // Places an order after the diner taps Confirm. Names and prices come from the menu on
 // the server, never from the browser.
 import { orderTotal, priceCart } from "@/lib/cart";
@@ -33,7 +34,8 @@ export async function POST(request: Request): Promise<Response> {
   const table = body.mode === "table" ? body.table : null;
   const notes = body.notes?.trim() || null;
   try {
-    const id = await saveOrder({ restaurant_id: restaurant.id, mode: body.mode, table_number: table, items, notes });
+    const id = await saveOrder({ restaurant_id: restaurant.id,
+      diner_id: (await profile(true))?.id, mode: body.mode, table_number: table, items, notes });
     return reply({ order: { id, items, total: orderTotal(items), notes, table, mode: body.mode } });
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);

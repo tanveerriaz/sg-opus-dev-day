@@ -36,7 +36,7 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
         {transcript.map((entry) => (
           <Entry key={entry.id} entry={entry} />
         ))}
-        {busy && <p className="text-sm text-stone-500">Thinking…</p>}
+        {busy && <p className="text-sm text-muted">Thinking…</p>}
         {transcript.length === 1 && !busy && voice.state === "off" && (
           <div className="flex flex-wrap gap-2 pt-1">
             {SUGGESTIONS.map((s) => (
@@ -44,7 +44,7 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
                 key={s}
                 type="button"
                 onClick={() => submit(s)}
-                className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm hover:bg-stone-100"
+                className="rounded-full border border-control bg-surface px-3 py-1.5 text-sm hover:bg-soft"
               >
                 {s}
               </button>
@@ -58,7 +58,7 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
         <button
           type="button"
           onClick={onOpenCart}
-          className="mx-4 mb-2 flex items-center justify-between rounded-lg bg-stone-200 px-3 py-2 text-sm"
+          className="mx-4 mb-2 flex items-center justify-between rounded-xl bg-stone-200 px-3 py-2 text-sm"
         >
           <span className="tabular-nums">Cart: {cartSummary}</span>
           <span className="font-medium">View cart</span>
@@ -66,12 +66,12 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
       )}
 
       {voice.state === "live" ? (
-        <div className="flex items-center gap-3 border-t border-stone-200 bg-white px-4 py-3">
+        <div className="flex items-center gap-3 border-t border-line bg-surface px-4 py-3">
           <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-red-500" aria-hidden />
-          <p className="min-w-0 flex-1 text-stone-700" role="status">
+          <p className="min-w-0 flex-1 text-muted" role="status">
             Listening. Just talk.
           </p>
-          <button type="button" onClick={voice.onStop} className="rounded-full border border-stone-300 px-4 py-2 font-medium">
+          <button type="button" onClick={voice.onStop} className="rounded-full border border-control px-4 py-2 font-medium">
             Type instead
           </button>
         </div>
@@ -81,7 +81,7 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
             e.preventDefault();
             submit(draft);
           }}
-          className="flex gap-2 border-t border-stone-200 bg-white px-4 py-3"
+          className="flex gap-2 border-t border-line bg-surface px-4 py-3"
         >
           <input
             value={draft}
@@ -89,12 +89,12 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
             placeholder="Ask or order, e.g. two laksa please"
             maxLength={1000}
             aria-label="Message the agent"
-            className="min-w-0 flex-1 rounded-full border border-stone-300 px-4 py-2 outline-none focus:border-stone-500"
+            className="min-w-0 flex-1 rounded-full border border-control px-4 py-2 outline-none focus:border-stone-500"
           />
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="rounded-full bg-stone-900 px-4 py-2 font-medium text-white disabled:opacity-40"
+            className="rounded-full bg-action px-4 py-2 font-medium text-on-action disabled:opacity-40"
           >
             Send
           </button>
@@ -103,7 +103,7 @@ export function ChatPanel({ transcript, busy, onSend, cartSummary, onOpenCart, v
             onClick={voice.onStart}
             disabled={busy || voice.state === "connecting"}
             aria-label="Talk to the agent"
-            className="rounded-full border border-stone-300 p-2.5 disabled:opacity-40"
+            className="rounded-full border border-control p-2.5 disabled:opacity-40"
           >
             <MicIcon pulsing={voice.state === "connecting"} />
           </button>
@@ -126,13 +126,13 @@ function Entry({ entry }: { entry: TranscriptEntry }) {
   switch (entry.kind) {
     case "user":
       return (
-        <p className="ml-auto w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-stone-900 px-3 py-2 text-white">
+        <p className="ml-auto w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-action px-3 py-2 text-on-action">
           {entry.text}
         </p>
       );
     case "agent":
       return (
-        <p className="w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-white px-3 py-2 shadow-sm">
+        <p className="w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-surface px-3 py-2 shadow-sm">
           {entry.text}
         </p>
       );
@@ -141,6 +141,6 @@ function Entry({ entry }: { entry: TranscriptEntry }) {
         <p className="mx-auto w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800">{entry.text}</p>
       );
     case "error":
-      return <p className="text-sm text-red-700">{entry.text}</p>;
+      return <p className="text-sm text-danger-ink">{entry.text}</p>;
   }
 }

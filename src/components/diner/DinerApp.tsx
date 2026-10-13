@@ -11,14 +11,16 @@ import { MenuList } from "./MenuList";
 import { OrderConfirmed, shortRef } from "./OrderConfirmed";
 import { ReviewSheet } from "./ReviewSheet";
 import { useTextAgent } from "./useTextAgent";
+import { useMemory, MemoryPanel } from "./useMemory";
 import { useVoiceAgent } from "./useVoiceAgent";
 
-type Tab = "menu" | "chat" | "cart";
+type Tab = "menu" | "chat" | "cart" | "memory";
 
 type Props = { restaurant: Restaurant; context: DinerContext };
 
 export function DinerApp({ restaurant, context }: Props) {
   const { menu } = restaurant;
+  const memory = useMemory();
   const [tab, setTab] = useState<Tab>("chat");
   const [cart, setCartState] = useState<Cart>([]);
   const cartRef = useRef<Cart>([]);
@@ -46,6 +48,7 @@ export function DinerApp({ restaurant, context }: Props) {
     cartRef,
     setCart,
     onReview: openReview,
+    onPreference: memory.save,
   });
 
   const { notify: notifyText } = agent;
@@ -56,6 +59,7 @@ export function DinerApp({ restaurant, context }: Props) {
     cartRef,
     setCart,
     onReview: openReview,
+    onPreference: memory.save,
     show: agent.show,
     revise: agent.revise,
     // The text agent didn't hear the voice conversation, so point it at the cart.
@@ -73,9 +77,9 @@ export function DinerApp({ restaurant, context }: Props) {
 
   if (context.mode === "delivery") {
     return (
-      <Shell restaurant={restaurant} subtitle="Delivery">
+      <Shell restaurant={restaurant} subtitle="Delivery order">
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-4 mt-4 rounded-lg bg-amber-50 px-4 py-3 text-amber-900">
+          <div className="mx-4 mt-4 rounded-xl bg-warning px-4 py-3 text-warning-ink">
             <p className="font-medium">Delivery is coming soon.</p>
             <p className="text-sm">For now you can browse the menu. Order at the restaurant or for pickup.</p>
           </div>
@@ -99,6 +103,7 @@ export function DinerApp({ restaurant, context }: Props) {
         setPlaceError(data.error);
         return;
       }
+      void memory.update();
       setPlaced(data.order);
       setReview(null);
       setCart([]);
@@ -146,6 +151,7 @@ export function DinerApp({ restaurant, context }: Props) {
   return (
     <Shell restaurant={restaurant} subtitle={subtitle}>
       {tab !== "chat" && voiceBanner}
+      {memory.data.preferences.length>0 && <div className="bg-sage px-4 py-2 text-sm text-sage-ink">Welcome back. Remembered: {memory.data.preferences.map(p=>p.value).join(", ")}. <button onClick={()=>setTab("memory")} className="underline">Manage</button></div>}
       <div className="min-h-0 flex-1 overflow-y-auto" hidden={tab !== "menu"}>
         <MenuList menu={menu} onAdd={(item) => setCart(addToCart(cartRef.current, menu, { item_id: item.id, quantity: 1 }).cart)} />
       </div>
@@ -170,9 +176,12 @@ export function DinerApp({ restaurant, context }: Props) {
         />
       </div>
 
-      <nav aria-label="Sections" className="flex border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)]">
+      <div className="min-h-0 flex-1 overflow-y-auto" hidden={tab!=="memory"}><MemoryPanel memory={memory}/></div>
+      {memory.pending && <div className="border-t bg-warning p-4" role="alert"><p>Remember {memory.pending.kind}: <strong>{memory.pending.value}</strong>?</p><button className="mr-4 font-semibold" onClick={async()=>{if(await memory.update({action:"save",...memory.pending,confirmed:true})){notifyAgent(`Preference confirmed and saved: ${memory.pending?.value}`);memory.setPending(null);}}}>Confirm preference</button><button onClick={()=>memory.setPending(null)}>Cancel</button></div>}
+      <nav aria-label="Sections" className="flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === "menu"} onClick={() => setTab("menu")} label="Menu" />
         <TabButton active={tab === "chat"} onClick={() => setTab("chat")} label="Chat" />
+        <TabButton active={tab === "memory"} onClick={() => setTab("memory")} label="Memory" />
         <TabButton active={tab === "cart"} onClick={() => setTab("cart")} label="Cart" badge={count} />
       </nav>
 
@@ -194,10 +203,10 @@ export function DinerApp({ restaurant, context }: Props) {
 
 function Shell({ restaurant, subtitle, children }: { restaurant: Restaurant; subtitle: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex h-dvh max-w-md flex-col">
-      <header className="border-b border-stone-200 bg-stone-50 px-4 py-3">
+    <main className="mx-auto flex h-[calc(100dvh-76px)] max-w-md flex-col">
+      <header className="border-b border-line bg-canvas px-4 py-3">
         <h1 className="text-xl font-bold">{restaurant.name}</h1>
-        <p className="text-sm text-stone-600">{subtitle}</p>
+        <p className="text-sm text-muted">{subtitle}</p>
       </header>
       {children}
     </main>
@@ -206,7 +215,7 @@ function Shell({ restaurant, subtitle, children }: { restaurant: Restaurant; sub
 
 function VoiceBanner({ onEnd }: { onEnd: () => void }) {
   return (
-    <div className="flex items-center gap-2 bg-stone-900 px-4 py-2 text-sm text-white" role="status">
+    <div className="flex items-center gap-2 bg-action px-4 py-2 text-sm text-on-action" role="status">
       <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
       <span className="flex-1">Voice is on. The agent is listening.</span>
       <button type="button" onClick={onEnd} className="font-medium underline">
@@ -222,13 +231,13 @@ function TabButton({ active, onClick, label, badge = 0 }: { active: boolean; onC
       type="button"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`relative flex-1 py-3 text-sm font-medium ${active ? "text-stone-900" : "text-stone-500"}`}
+      className={`relative flex-1 py-3 text-sm font-medium ${active ? "text-ink" : "text-muted"}`}
     >
       {label}
       {badge > 0 && (
-        <span className="ml-1.5 rounded-full bg-stone-900 px-1.5 py-0.5 text-xs tabular-nums text-white">{badge}</span>
+        <span className="ml-1.5 rounded-full bg-action px-1.5 py-0.5 text-xs tabular-nums text-on-action">{badge}</span>
       )}
-      {active && <span className="absolute inset-x-6 top-0 h-0.5 bg-stone-900" aria-hidden />}
+      {active && <span className="absolute inset-x-6 top-0 h-0.5 bg-action" aria-hidden />}
     </button>
   );
 }

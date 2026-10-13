@@ -1,6 +1,8 @@
 // One turn of the text agent. The browser sends the conversation; this asks Claude for the
 // next message and returns its text and/or tool calls. Tools run in the browser (see
 // src/lib/agent/tools.ts), which then calls this route again with the results.
+import { memoryInstructions } from "@/lib/diner-profile";
+import { openAIChat } from "@/lib/agent/openai-chat";
 import Anthropic from "@anthropic-ai/sdk";
 import type { BetaContentBlock, BetaMessageParam } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import { buildInstructions } from "@/lib/agent/instructions";
@@ -38,6 +40,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!restaurant) return reply({ error: "Restaurant not found." }, 404);
 
   try {
+    const instructions = buildInstructions(restaurant, { mode: body.mode, table: body.table }) + await memoryInstructions();
+    if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) return reply({content: await openAIChat(body.history, instructions)});
     // Reads ANTHROPIC_API_KEY (or another credential source the SDK supports).
     claude ??= new Anthropic();
     const response = await claude.beta.messages.create({
@@ -50,7 +54,7 @@ export async function POST(request: Request): Promise<Response> {
       fallbacks: "default",
       // Tools and the menu prompt are the same every turn, so cache them.
       cache_control: { type: "ephemeral" },
-      system: buildInstructions(restaurant, { mode: body.mode, table: body.table }),
+      system: instructions,
       tools: toClaudeTools(),
       messages: body.history as BetaMessageParam[],
     });

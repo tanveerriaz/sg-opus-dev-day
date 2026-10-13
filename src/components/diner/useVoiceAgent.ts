@@ -15,6 +15,7 @@ const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
 export type VoiceState = "off" | "connecting" | "live";
 
 type Options = {
+  onPreference: (p:{kind:string;value:string})=>Promise<string>;
   restaurantId: string;
   context: DinerContext;
   menu: Menu;
@@ -48,7 +49,7 @@ type RealtimeEvent = {
   response?: { output?: { type: string; status?: string; name?: string; call_id?: string; arguments?: string }[] };
 };
 
-export function useVoiceAgent({ restaurantId, context, menu, cartRef, setCart, onReview, show, revise, onEnded }: Options) {
+export function useVoiceAgent({ restaurantId, context, menu, cartRef, setCart, onReview, onPreference, show, revise, onEnded }: Options) {
   const [state, setState] = useState<VoiceState>("off");
   const session = useRef<Session | null>(null);
   // The cart as the agent last saw it, to tell it about changes the diner makes by hand.
@@ -93,7 +94,7 @@ export function useVoiceAgent({ restaurantId, context, menu, cartRef, setCart, o
   );
 
   const handle = useCallback(
-    (event: RealtimeEvent) => {
+    async (event: RealtimeEvent) => {
       switch (event.type) {
         case "input_audio_buffer.speech_started":
           // Lands in the conversation just before what the diner is about to say.
@@ -126,6 +127,7 @@ export function useVoiceAgent({ restaurantId, context, menu, cartRef, setCart, o
               input = JSON.parse(call.arguments || "{}");
             } catch {}
             const outcome = runTool(call.name ?? "", input, { cart: cartRef.current, menu });
+            if(outcome.preference) outcome.output = await onPreference(outcome.preference);
             cartRef.current = outcome.cart;
             setCart(outcome.cart);
             send({
@@ -146,7 +148,7 @@ export function useVoiceAgent({ restaurantId, context, menu, cartRef, setCart, o
           break;
       }
     },
-    [cartRef, menu, onReview, revise, send, sendScreenNote, setCart, show],
+    [onPreference, cartRef, menu, onReview, revise, send, sendScreenNote, setCart, show],
   );
 
   /** Starts a voice conversation. Call it from a tap, so the browser allows the microphone and sound. */

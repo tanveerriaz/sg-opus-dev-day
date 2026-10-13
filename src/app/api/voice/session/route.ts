@@ -1,3 +1,4 @@
+import { memoryInstructions } from "@/lib/diner-profile";
 // Starts a voice conversation (#6). The phone talks to OpenAI Realtime directly over WebRTC,
 // so this route makes a short-lived key for it; the real API key stays on the server.
 // The session gets the same instructions and tool list as the text agent.
@@ -45,7 +46,7 @@ export async function POST(request: Request): Promise<Response> {
         session: {
           type: "realtime",
           model: MODEL,
-          instructions: buildVoiceInstructions(restaurant, { mode: body.mode, table: body.table }),
+          instructions: buildVoiceInstructions(restaurant, { mode: body.mode, table: body.table }) + await memoryInstructions(),
           tools: toRealtimeTools(),
           tool_choice: "auto",
           audio: {
