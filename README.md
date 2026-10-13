@@ -34,6 +34,22 @@ Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [
 
 Phones need a public HTTPS URL to scan, so deploy early.
 
+**Production:** https://sg-opus-dev-day.vercel.app
+
+**Table 12:** https://sg-opus-dev-day.vercel.app/r/kopi-satay-house?mode=table&t=12
+
+The current deployment uses Vercel project `sg-opus-dev-day` under `priyadharshan-kannans-projects`, connected to Supabase project `opus5.5-build-day`. Both Supabase environment variables are configured for production only; the service-role key is stored as a Vercel secret.
+
+Git integration could not connect to the repository. Releases are currently manual from this folder:
+
+```bash
+npx vercel@54.0.0 deploy --prod --scope priyadharshan-kannans-projects
+```
+
+The initial production release is commit `23b1267` from PR #7. Merging or pushing commits does not currently trigger a deployment.
+
+### Setup for another environment
+
 1. Push this folder to the GitHub repo.
 2. In Vercel, **Add New → Project**, import the repo, and add the same env vars as `.env.local`.
 3. Open `https://<your-app>.vercel.app/r/kopi-satay-house?mode=table&t=12` on a phone.
@@ -67,4 +83,6 @@ Before marking issue #1 complete, open the production table-12 link on a physica
 - Local production HTTP checks: passed for all five URL contexts and unknown restaurant.
 - 390px browser viewport: all 11 items present, no horizontal overflow.
 - Dependency audit after PostCSS patch: zero reported vulnerabilities.
-- Live Supabase connection, public Vercel deployment, and physical-phone check: pending account/project access. No deployed URL has been verified.
+- Supabase: initial schema applied through the SQL editor; all three tables exist with RLS enabled. Stored seed has 11 items, including three tagged with peanuts.
+- Production: Vercel deployment `dpl_9mxZrBWChx1yiVbqppz12rrPLA4F` is READY with the production database settings. Public HTTPS smoke checks pass for all five URL contexts and the missing-restaurant 404.
+- Physical-phone check: awaiting confirmation. Browser mobile-width verification does not replace this acceptance step.
