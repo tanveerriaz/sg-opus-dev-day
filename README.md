@@ -12,7 +12,7 @@ Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [
    npm install
    ```
 
-2. Create a Supabase project, open its **SQL editor**, and run `supabase/migrations/0001_init.sql`.
+2. Create a Supabase project, open its **SQL editor**, and run the files in `supabase/migrations/` in order (`0001_init.sql`, then `0002_orders_served_at.sql`).
 
 3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API).
 
@@ -29,6 +29,8 @@ Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [
    ```
 
    Without the Supabase env vars, the app still serves the seed restaurant from `src/data/seed-restaurant.json`, so the UI can be worked on before Supabase is set up.
+
+6. The kitchen screen for a restaurant is at http://localhost:3000/r/kopi-satay-house/dashboard. It checks for new orders every 2 seconds. Without Supabase it shows a few sample orders that live in memory.
 
 ## Deploy
 
