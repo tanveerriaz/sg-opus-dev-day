@@ -4,6 +4,16 @@ Paste a restaurant's website, get a QR code. Diners scan it and order by chattin
 
 Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [docs/menu-format.md](docs/menu-format.md)
 
+## Grub presentation
+
+[**Open the Grub presentation**](https://grub-presentation.vercel.app/) — press **F** for fullscreen and use the arrow keys to move between slides.
+
+Scan the QR code below or click the card to open the presentation.
+
+<a href="https://grub-presentation.vercel.app/">
+  <img src="docs/assets/grub-presentation-qr.png" alt="Grub — A dining companion that listens. Scan to view the presentation." width="360">
+</a>
+
 ## Setup
 
 1. Install dependencies:
