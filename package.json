@@ -9,14 +9,16 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "check:menu": "node scripts/check-menu.mjs",
     "check:db": "node --env-file-if-exists=.env.local scripts/check-db.mjs",
-    "check:smoke": "node scripts/check-smoke.mjs"
+    "check:smoke": "node scripts/check-smoke.mjs",
+    "check:scrape": "node --test scripts/check-scrape.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",
@@ -24,7 +26,8 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "@types/qrcode": "^1.5.5"
   },
   "overrides": {
     "postcss": "8.5.30"
