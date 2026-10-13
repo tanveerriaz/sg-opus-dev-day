@@ -37,6 +37,16 @@ Menu (prices in ${menu.currency}):
 ${menuLines.join("\n")}`;
 }
 
+/** The same instructions for the voice agent (#6), plus how to behave when speaking. */
+export function buildVoiceInstructions(restaurant: Restaurant, context: DinerContext): string {
+  return `${buildInstructions(restaurant, context)}
+
+Voice mode:
+- The diner is talking to you and hears your replies out loud. Speak naturally and briefly, say prices the way a person would, and never read out an item's [id].
+- [Screen] lines now arrive as separate messages from the app, not from the diner. Use them silently; only speak about one when it says the diner did something, such as confirming or closing the order summary.
+- After you call place_order, tell the diner to tap Confirm on their screen.`;
+}
+
 /** The [Screen] line sent with each diner message: live cart plus on-screen events. */
 export function screenNote(cart: Cart, menu: Menu, events: string[]): string {
   return [`[Screen] Cart: ${describeCart(cart, menu)}`, ...events].join(" ");

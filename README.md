@@ -14,7 +14,7 @@ Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [
 
 2. Create a Supabase project, open its **SQL editor**, and run `supabase/migrations/0001_init.sql`.
 
-3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API), and `ANTHROPIC_API_KEY` for the ordering agent (Claude Console → API keys).
+3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API), and `ANTHROPIC_API_KEY` for the ordering agent (Claude Console → API keys). Add `OPENAI_API_KEY` to turn on voice: the mic button in the chat talks to the same agent with OpenAI Realtime. The mic needs HTTPS (or localhost), so test voice on a phone with the deployed URL.
 
 4. Load the seed restaurant:
 

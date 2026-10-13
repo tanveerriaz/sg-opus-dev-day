@@ -68,6 +68,11 @@ export function toClaudeTools(): { name: string; description: string; input_sche
   }));
 }
 
+/** The tool list in the OpenAI Realtime session format, for the voice agent. */
+export function toRealtimeTools(): { type: "function"; name: string; description: string; parameters: Record<string, unknown> }[] {
+  return AGENT_TOOLS.map((tool) => ({ type: "function", ...tool }));
+}
+
 export type ToolState = { cart: Cart; menu: Menu };
 
 export type ToolOutcome = {

@@ -11,6 +11,7 @@ import { MenuList } from "./MenuList";
 import { OrderConfirmed, shortRef } from "./OrderConfirmed";
 import { ReviewSheet } from "./ReviewSheet";
 import { useTextAgent } from "./useTextAgent";
+import { useVoiceAgent } from "./useVoiceAgent";
 
 type Tab = "menu" | "chat" | "cart";
 
@@ -47,6 +48,29 @@ export function DinerApp({ restaurant, context }: Props) {
     onReview: openReview,
   });
 
+  const { notify: notifyText } = agent;
+  const voice = useVoiceAgent({
+    restaurantId: restaurant.id,
+    context,
+    menu,
+    cartRef,
+    setCart,
+    onReview: openReview,
+    show: agent.show,
+    revise: agent.revise,
+    // The text agent didn't hear the voice conversation, so point it at the cart.
+    onEnded: useCallback(
+      () => notifyText("The diner talked to you in voice mode since their last typed message, so the cart may have changed."),
+      [notifyText],
+    ),
+  });
+
+  /** Tells whichever agent the diner is using about something that happened on screen. */
+  const notifyAgent = (event: string) => {
+    agent.notify(event);
+    voice.notify(event);
+  };
+
   if (context.mode === "delivery") {
     return (
       <Shell restaurant={restaurant} subtitle="Delivery">
@@ -75,12 +99,12 @@ export function DinerApp({ restaurant, context }: Props) {
         setPlaceError(data.error);
         return;
       }
-      agent.notify(
-        `The diner confirmed on screen and order #${shortRef(data.order.id)} was placed. The cart is now empty. If they want more, start a new order.`,
-      );
       setPlaced(data.order);
       setReview(null);
       setCart([]);
+      notifyAgent(
+        `The diner confirmed on screen and order #${shortRef(data.order.id)} was placed. The cart is now empty. If they want more, start a new order.`,
+      );
     } catch {
       setPlaceError("Couldn't reach the server. Check your connection and try again.");
     } finally {
@@ -89,7 +113,7 @@ export function DinerApp({ restaurant, context }: Props) {
   };
 
   const cancelReview = () => {
-    agent.notify("The diner closed the order summary without confirming. Ask what they'd like to change.");
+    notifyAgent("The diner closed the order summary without confirming. Ask what they'd like to change.");
     setReview(null);
     setTab("chat");
   };
@@ -98,9 +122,13 @@ export function DinerApp({ restaurant, context }: Props) {
   const cartSummary = count > 0 ? `${count} ${count === 1 ? "item" : "items"} · ${formatPrice(orderTotal(priceCart(cart, menu)), menu.currency)}` : null;
   const subtitle = context.mode === "pickup" ? "Pickup order" : context.table ? `Dine-in · Table ${context.table}` : "Dine-in";
 
+  // The chat tab has its own "Listening" bar, so the banner covers every other screen.
+  const voiceBanner = voice.state === "live" && <VoiceBanner onEnd={voice.stop} />;
+
   if (placed) {
     return (
       <Shell restaurant={restaurant} subtitle={subtitle}>
+        {voiceBanner}
         <div className="min-h-0 flex-1 overflow-y-auto">
           <OrderConfirmed
             order={placed}
@@ -117,6 +145,7 @@ export function DinerApp({ restaurant, context }: Props) {
 
   return (
     <Shell restaurant={restaurant} subtitle={subtitle}>
+      {tab !== "chat" && voiceBanner}
       <div className="min-h-0 flex-1 overflow-y-auto" hidden={tab !== "menu"}>
         <MenuList menu={menu} onAdd={(item) => setCart(addToCart(cartRef.current, menu, { item_id: item.id, quantity: 1 }).cart)} />
       </div>
@@ -127,6 +156,7 @@ export function DinerApp({ restaurant, context }: Props) {
           onSend={agent.send}
           cartSummary={cartSummary}
           onOpenCart={() => setTab("cart")}
+          voice={{ state: voice.state, onStart: voice.start, onStop: voice.stop }}
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto" hidden={tab !== "cart"}>
@@ -171,6 +201,18 @@ function Shell({ restaurant, subtitle, children }: { restaurant: Restaurant; sub
       </header>
       {children}
     </main>
+  );
+}
+
+function VoiceBanner({ onEnd }: { onEnd: () => void }) {
+  return (
+    <div className="flex items-center gap-2 bg-stone-900 px-4 py-2 text-sm text-white" role="status">
+      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" aria-hidden />
+      <span className="flex-1">Voice is on. The agent is listening.</span>
+      <button type="button" onClick={onEnd} className="font-medium underline">
+        End
+      </button>
+    </div>
   );
 }
 

@@ -36,7 +36,14 @@ export function useTextAgent({ restaurantId, restaurantName, context, menu, cart
   const [busy, setBusy] = useState(false);
 
   const show = useCallback((kind: TranscriptEntry["kind"], text: string) => {
-    setTranscript((t) => [...t, { id: nextId.current++, kind, text }]);
+    const id = nextId.current++;
+    setTranscript((t) => [...t, { id, kind, text }]);
+    return id;
+  }, []);
+
+  /** Replaces an entry's text, e.g. once the diner's speech has been transcribed. */
+  const revise = useCallback((id: number, text: string) => {
+    setTranscript((t) => t.map((entry) => (entry.id === id ? { ...entry, text } : entry)));
   }, []);
 
   const send = useCallback(
@@ -107,5 +114,5 @@ export function useTextAgent({ restaurantId, restaurantName, context, menu, cart
     pendingEvents.current.push(event);
   }, []);
 
-  return { transcript, busy, send, notify };
+  return { transcript, busy, send, notify, show, revise };
 }

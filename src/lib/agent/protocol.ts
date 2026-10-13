@@ -32,6 +32,11 @@ export type ChatRequest = {
 /** The agent's next message: text and/or tool calls for the browser to run. */
 export type ChatResponse = { content: AgentBlock[] } | { error: string };
 
+export type VoiceSessionRequest = { restaurantId: string; mode: Mode; table: string | null };
+
+/** A short-lived key the phone uses to connect to OpenAI Realtime. Never the real API key. */
+export type VoiceSessionResponse = { clientSecret: string } | { error: string };
+
 export type OrderRequest = {
   restaurantId: string;
   mode: Mode;
