@@ -86,3 +86,24 @@ Before marking issue #1 complete, open the production table-12 link on a physica
 - Supabase: initial schema applied through the SQL editor; all three tables exist with RLS enabled. Stored seed has 11 items, including three tagged with peanuts.
 - Production: Vercel deployment `dpl_9mxZrBWChx1yiVbqppz12rrPLA4F` is READY with the production database settings. Public HTTPS smoke checks pass for all five URL contexts and the missing-restaurant 404.
 - Physical-phone check: user confirmed the production restaurant name, Table 12 and menu work on a real phone on 13 October 2026. All five issue #1 acceptance criteria are verified.
+
+## Restaurant onboarding (issue #3)
+
+Open `/restaurant`. Choose **Website URL** or **Upload menu photos**. Photo uploads accept 1–8 JPG, PNG or WebP files, up to 3 MB combined; export HEIC as JPG first. Photos go to OpenAI for extraction; only the resulting menu is stored, with no uploaded photo URLs. Production requires Supabase plus a server-only `OPENAI_API_KEY`. Optional `OPENAI_EXTRACT_MODEL` defaults to `gpt-4.1`; optional `JINA_API_KEY` increases reader limits.
+
+Website scrapes use Jina Reader and OpenAI vision, preserve the shared menu contract, and save successful results to `restaurants`. Repeat scrapes keep the restaurant ID. A cached URL falls back to its saved menu on a live failure or after about 20 seconds, including time spent on database calls. First-time scrapes and uploads have a 55-second budget. Uploads create a new restaurant each time. Production refuses to report success without persistent storage; local development may use memory.
+
+The QR defaults to dine-in/Table 1. Change the table or select pickup/delivery before downloading. Use the public HTTPS app when generating phone QR codes, not localhost.
+
+```bash
+npm run check:scrape             # deterministic provider/timeout/upload regressions
+npm run check:menu
+npm run build
+npm run check:smoke -- https://sg-opus-dev-day.vercel.app
+# Explicit live opt-in: billable extraction, saves a test restaurant with four dishes.
+node scripts/check-scrape-live.mjs https://sg-opus-dev-day.vercel.app
+# Or verify a real restaurant website:
+node scripts/check-scrape-live.mjs https://sg-opus-dev-day.vercel.app https://www.pastamania.com.sg/menu
+```
+
+Demo URLs: `https://www.pastamania.com.sg/menu` (image-based menu) and `https://www.lanonna.sg/menu` (text and photos). Menus and prices extracted by AI should be checked by the owner before real ordering. See `docs/verification/issue-3.md` for the tested scope and results.
