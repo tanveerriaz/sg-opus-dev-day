@@ -24,7 +24,7 @@ Scan the QR code below or click the card to open the presentation.
 
 2. Create a Supabase project, open its **SQL editor**, and run the files in `supabase/migrations/` in order (`0001_init.sql`, then `0002_orders_served_at.sql`).
 
-3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API).
+3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API), and `ANTHROPIC_API_KEY` for the ordering agent (Claude Console → API keys). Add `OPENAI_API_KEY` to turn on voice: the mic button in the chat talks to the same agent with OpenAI Realtime. The mic needs HTTPS (or localhost), so test voice on a phone with the deployed URL.
 
 4. Load the seed restaurant:
 

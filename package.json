@@ -13,6 +13,7 @@
     "check:scrape": "node --test scripts/check-scrape.cjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@supabase/supabase-js": "^2.45.0",
     "next": "^15.5.0",
     "react": "^19.1.0",

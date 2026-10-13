@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import type { Mode } from "./menu";
 import { SEED_RESTAURANT_ID } from "./restaurants";
 import { getSupabase } from "./supabase";
@@ -40,7 +41,7 @@ const UNDEFINED_COLUMN = "42703";
 export async function listKitchenOrders(restaurantId: string): Promise<KitchenOrders> {
   const supabase = getSupabase();
   if (!supabase) {
-    return { orders: sampleOrders(restaurantId), canMarkServed: true };
+    return { orders: [...memory.filter(o => o.restaurant_id === restaurantId), ...sampleOrders(restaurantId)], canMarkServed: true };
   }
 
   const latest = (columns: string) =>
@@ -68,7 +69,7 @@ export async function listKitchenOrders(restaurantId: string): Promise<KitchenOr
 export async function markOrderServed(restaurantId: string, orderId: string): Promise<boolean> {
   const supabase = getSupabase();
   if (!supabase) {
-    const order = sampleOrders(restaurantId).find((o) => o.id === orderId);
+    const order = [...memory.filter(o => o.restaurant_id === restaurantId), ...sampleOrders(restaurantId)].find((o) => o.id === orderId);
     if (!order) return false;
     order.served_at ??= new Date().toISOString();
     return true;
@@ -134,4 +135,34 @@ function sampleOrders(restaurantId: string): KitchenOrder[] {
     },
   ];
   return globalForSamples.sampleKitchenOrders;
+}
+
+export type NewOrder = {
+  diner_id?: string;
+  restaurant_id: string;
+  mode: Mode;
+  table_number: string | null;
+  items: OrderItem[];
+  notes: string | null;
+};
+
+export type StoredOrder = NewOrder & { id: string; created_at: string; served_at: string | null };
+
+// Without Supabase (local dev), orders live in memory until the server restarts.
+// Kept on globalThis so Next's hot reload doesn't wipe them.
+const memory = ((globalThis as { __orders?: StoredOrder[] }).__orders ??= []);
+
+/** Saves an order and returns its id. */
+export async function saveOrder(order: NewOrder): Promise<string> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.warn("Supabase isn't configured; keeping the order in memory.");
+    const id = randomUUID();
+    memory.unshift({ ...order, id, created_at: new Date().toISOString(), served_at: null });
+    return id;
+  }
+
+  const { data, error } = await supabase.from("orders").insert(order).select("id").single();
+  if (error) throw new Error(`Saving the order failed: ${error.message}`);
+  return data.id as string;
 }
