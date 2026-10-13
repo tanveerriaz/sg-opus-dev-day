@@ -14,7 +14,7 @@ Tickets: https://github.com/tanveerriaz/sg-opus-dev-day/issues · Menu format: [
 
 2. Create a Supabase project, open its **SQL editor**, and run `supabase/migrations/0001_init.sql`.
 
-3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API).
+3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API), and `ANTHROPIC_API_KEY` for the ordering agent (Claude Console → API keys).
 
 4. Load the seed restaurant:
 
